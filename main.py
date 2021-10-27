@@ -138,7 +138,7 @@ class Simulation:
         return self.daily_stats_mean
 
 
-sim = Simulation(pop_size=1000, iterations=10)
+sim = Simulation()
 stats = sim.start_simulation()
 means = sim.generate_final_answer()
 df = sim.daily_data_stats

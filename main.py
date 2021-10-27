@@ -151,8 +151,8 @@ class Simulation:
                    ylabel=stat.capitalize())
             sns.set(font_scale=0.45)
             ax.set_title('{} Per day - {} #{}'.format(stat.capitalize(),
-                                                  ro.capitalize()[:-1],
-                                                     ro[-1]),
+                                                      ro.capitalize()[:-1],
+                                                      ro[5]),
                          fontsize=13)
             ax.set_xticklabels(ax.get_xticklabels(),
                                rotation=30)

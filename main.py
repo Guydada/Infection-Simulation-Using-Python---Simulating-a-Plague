@@ -4,7 +4,6 @@ import pandas as pd
 from random import randint
 from tqdm import tqdm
 
-
 class Round:
     def __init__(self,
                  pop_size=100000,
@@ -27,7 +26,6 @@ class Round:
         self.pop_size = pop_size
         self.daily_data = pd.DataFrame(columns=self.round_cols)
         self.pop = self.generate_population()
-        # self.round_summary = self.generate_round_summary()
         self.day_num = 0
 
     def update_daily(self, new_cases):
@@ -118,6 +116,7 @@ class Simulation:
         self.pop_size = pop_size
         self.iterations = iterations
         self.stats = pd.DataFrame()
+        self.daily_stats_mean = pd.DataFrame()
         self.daily_data_stats = {}
 
     def start_simulation(self):
@@ -134,10 +133,14 @@ class Simulation:
 
     def generate_daily_stats_sum(self):
         df = pd.concat(self.daily_data_stats.values())
-
+        df = df.groupby(by=df.index, axis=0).mean()
+        self.daily_stats_mean = df
+        return self.daily_stats_mean
 
 
 sim = Simulation(pop_size=1000, iterations=10)
 stats = sim.start_simulation()
 means = sim.generate_final_answer()
+df = sim.daily_data_stats
+daily_means = sim.daily_data_stats
 print(means)

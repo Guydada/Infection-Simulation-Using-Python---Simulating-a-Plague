@@ -3,6 +3,10 @@ from numpy.random import choice
 import pandas as pd
 from random import randint
 from tqdm import tqdm
+import matplotlib.ticker as ticker
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 class Round:
     def __init__(self,
@@ -137,10 +141,27 @@ class Simulation:
         self.daily_stats_mean = df
         return self.daily_stats_mean
 
+    def generate_plots(self, stat):
+        sns.set_style('whitegrid')
+        for ro in self.daily_data_stats:
+            ax = sns.pointplot(data=self.daily_data_stats[ro],
+                               x=self.daily_data_stats[ro].index,
+                               y=stat)
+            ax.set(xlabel='Days of Simulation',
+                   ylabel=stat.capitalize())
+            sns.set(font_scale=0.45)
+            ax.set_title('{} Per day - {} #{}'.format(stat.capitalize(),
+                                                  ro.capitalize()[:-1],
+                                                     ro[-1]),
+                         fontsize=13)
+            ax.set_xticklabels(ax.get_xticklabels(),
+                               rotation=30)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+            ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+            plt.show()
+
 
 sim = Simulation()
 stats = sim.start_simulation()
 means = sim.generate_final_answer()
-df = sim.daily_data_stats
-daily_means = sim.daily_data_stats
 print(means)

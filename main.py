@@ -31,16 +31,13 @@ class Round:
         self.day_num = 0
 
     def update_daily(self, new_cases):
-        vulnerable = (self.pop['status'] == 'vulnerable').sum()
-        infected = (self.pop['status'] == 'infected').sum()
-        recovered = (self.pop['status'] == 'recovered').sum()
-        dead = (self.pop['status'] == 'dead').sum()
-        row = [vulnerable,
-               infected,
-               recovered,
-               dead,
-               new_cases]
-        self.daily_data.loc[self.day_num] = row
+        variables = ['vulnerable',
+                     'infected',
+                     'recovered',
+                     'dead']
+        daily_row = {var: (self.pop['status'] == var).sum() for var in variables}
+        daily_row['new_cases'] = new_cases
+        self.daily_data.loc[self.day_num] = daily_row.values()
 
     def generate_population(self):
         population_cols = ['status',
@@ -121,11 +118,13 @@ class Simulation:
         self.pop_size = pop_size
         self.iterations = iterations
         self.stats = pd.DataFrame()
+        self.daily_data_stats = {}
 
     def start_simulation(self):
         for i in tqdm(range(self.iterations)):
             round = Round(pop_size=self.pop_size)
             self.stats[i] = round.start_round()
+            self.daily_data_stats[f'round{i}'] = round.daily_data
         return self.stats.T
 
     def generate_final_answer(self):
@@ -133,9 +132,12 @@ class Simulation:
         means = means.apply(lambda x: f"{x:.2f}")
         return means
 
+    def generate_daily_stats_sum(self):
+        df = pd.concat(self.daily_data_stats.values())
 
-sim = Simulation()
+
+
+sim = Simulation(pop_size=1000, iterations=10)
 stats = sim.start_simulation()
 means = sim.generate_final_answer()
 print(means)
-

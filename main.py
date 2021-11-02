@@ -6,9 +6,25 @@ from tqdm import tqdm
 import matplotlib.ticker as ticker
 import matplotlib.pyplot as plt
 import seaborn as sns
+import datargs
+from dataclasses import dataclass
 
+# The following code creates a simulation of an infection using a given population size and parameters
+# for infection, death and recovery rates. We have created this code from scratch based on our ideas and not on any
+# common project. As a method, we chose using OOP.
+# The probability "engine" is based on the "choice" function from numpy.random.
+# The data collected is structured:
+#  - Each round holds an ID for every member of the population with it's current status.
+#  - Every day's infections,deaths and recoveries are counted to a 2nd DF
+#  - When a round ends a round summary is created
+#  - When the simulation ends a summary of the round summaries is created
+#  - From the round summaries a final answer to the HA is created
 
 class Round:
+    """
+    This class creates the basic round object: a round is a simulation of infection for a given size population from
+    day 0 to the point which there are no more infected personal
+    """
     def __init__(self,
                  pop_size=100000,
                  p_params=None):
@@ -33,6 +49,12 @@ class Round:
         self.day_num = 0
 
     def update_daily(self, new_cases):
+
+        """
+        A method to update the daily data
+        :param new_cases:
+        :return: None
+        """
         variables = ['vulnerable',
                      'infected',
                      'recovered',
@@ -42,6 +64,10 @@ class Round:
         self.daily_data.loc[self.day_num] = daily_row.values()
 
     def generate_population(self):
+        """
+        A method to create the round's population
+        :return:None
+        """
         population_cols = ['status',
                            'days_sick',
                            'to_infect']
@@ -52,6 +78,10 @@ class Round:
         return population
 
     def start_round(self):
+        """
+        A method to launch the round
+        :return: Round Summary DF
+        """
         patient_0 = randint(0, self.pop_size)
         self.pop.loc[patient_0] = ['infected', 0, 0]
         infected = (self.pop['status'] == 'infected').sum()
@@ -62,11 +92,19 @@ class Round:
         return self.generate_round_summary()
 
     def day(self):
+        """
+        Initialize a day simulation
+        :return: None
+        """
         new_cases = self.simulate_infections()
         self.update_sick()
         self.update_daily(new_cases)
 
     def simulate_infections(self):
+        """
+        This method simulates the infection over a day in the given population
+        :return: Number of daily new cases
+        """
         infected = (self.pop['status'] == 'infected').sum()
         mask = (self.pop['status'] == 'infected')
         self.pop.loc[mask, 'to_infect'] = choice([0, 1, 2],
@@ -83,6 +121,10 @@ class Round:
         return new_cases
 
     def update_sick(self):
+        """
+        Update the condition of the "infected" status members
+        :return:
+        """
         si = len(self.pop['status'].loc[self.pop['days_sick'] >= 10])
         mask = (self.pop['days_sick'] >= 10)
         self.pop.loc[mask, 'status'] = choice(['infected',
@@ -99,6 +141,10 @@ class Round:
         self.pop.loc[mask, 'days_sick'] += 1
 
     def generate_round_summary(self):
+        """
+        Create the summary DF for the current round
+        :return: Round Summary DF
+        """
         df = self.daily_data.copy()
         df['overall_infections(a)'] = df.sum()['infected']
         last_ind = self.daily_data.tail(1).index[0]
@@ -116,6 +162,9 @@ class Round:
 
 
 class Simulation:
+    """
+    This is the main method for the simulation. It facilitates the simulation over a given number of rounds (default is 100)
+    """
     def __init__(self, pop_size=100000, iterations=100):
         self.pop_size = pop_size
         self.iterations = iterations
@@ -124,6 +173,10 @@ class Simulation:
         self.daily_data_stats = {}
 
     def start_simulation(self):
+        """
+        Initialize the simulation
+        :return: A stats DF containing the summary and averages of all the iterations
+        """
         for i in tqdm(range(self.iterations)):
             round = Round(pop_size=self.pop_size)
             self.stats[i] = round.start_round()
@@ -131,17 +184,30 @@ class Simulation:
         return self.stats.T
 
     def generate_final_answer(self):
+        """
+        Formats the answer to the asked submission format
+        :return: the Means DF - containing the HA answer
+        """
         means = self.stats.T.mean()
         means = means.apply(lambda x: f"{x:.2f}")
         return means
 
     def generate_daily_stats_sum(self):
+        """
+        Updates the daily stats of a round for creating the final Means DF
+        :return: Daily Stats Means DF
+        """
         df = pd.concat(self.daily_data_stats.values())
         df = df.groupby(by=df.index, axis=0).mean()
         self.daily_stats_mean = df
         return self.daily_stats_mean
 
     def generate_plots(self, stat):
+        """
+        Create a visual plot for displaying
+        :param stat: select one the following: {'vulnerable', 'infected', 'recovered', 'dead'}
+        :return: None
+        """
         sns.set_style('whitegrid')
         for ro in self.daily_data_stats:
             ax = sns.pointplot(data=self.daily_data_stats[ro],
@@ -161,7 +227,23 @@ class Simulation:
             plt.show()
 
 
-sim = Simulation()
-stats = sim.start_simulation()
-means = sim.generate_final_answer()
-print(means)
+@dataclass
+class Sim_Args:
+    """
+    Create arguments class for CLI
+    """
+    pop_size: int = int(1e5)  # Comments can be used for documentation
+    iterations: int = 100
+
+
+def main(args: Sim_Args):
+    print(f"Running {args.pop_size} simulations with {args.iterations} people each.")
+    sim = Simulation(pop_size=args.pop_size, iterations=args.iterations)
+    stats = sim.start_simulation()
+    means = sim.generate_final_answer()
+    print(means)
+
+
+if __name__ == "__main__":
+    args = datargs.parse(Sim_Args)
+    main(args)

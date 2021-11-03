@@ -1,0 +1,4 @@
+1. Locate path for the "requirements.txt" embedded with this project
+2. Change directory using the terminal to the location
+3. Run the command: "pip install -r requirements.txt"
+4. Required dependencies are installed

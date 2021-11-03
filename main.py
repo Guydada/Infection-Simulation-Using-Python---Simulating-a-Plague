@@ -9,6 +9,7 @@ import seaborn as sns
 import datargs
 from dataclasses import dataclass
 
+
 # The following code creates a simulation of an infection using a given population size and parameters
 # for infection, death and recovery rates. We have created this code from scratch based on our ideas and not on any
 # common project. As a method, we chose using OOP.
@@ -19,6 +20,7 @@ from dataclasses import dataclass
 #  - When a round ends a round summary is created
 #  - When the simulation ends a summary of the round summaries is created
 #  - From the round summaries a final answer to the HA is created
+
 
 class Round:
     """
@@ -49,7 +51,6 @@ class Round:
         self.day_num = 0
 
     def update_daily(self, new_cases):
-
         """
         A method to update the daily data
         :param new_cases:
@@ -190,6 +191,7 @@ class Simulation:
         """
         means = self.stats.T.mean()
         means = means.apply(lambda x: f"{x:.2f}")
+        means[1:4] = means[1:4] + '%'
         return means
 
     def generate_daily_stats_sum(self):
@@ -232,16 +234,22 @@ class Sim_Args:
     """
     Create arguments class for CLI
     """
-    pop_size: int = int(1e5)  # Comments can be used for documentation
-    iterations: int = 100
+    num_people: int = int(1e5)
+    num_experiments: int = 100
 
 
 def main(args: Sim_Args):
-    print(f"Running {args.pop_size} simulations with {args.iterations} people each.")
-    sim = Simulation(pop_size=args.pop_size, iterations=args.iterations)
+    """
+    Main code for running the program
+    :param args:
+    :return: Final Answer DF
+    """
+    print(f"Running {args.num_experiments} simulations with {args.num_people} people each.")
+    sim = Simulation(pop_size=args.num_people, iterations=args.num_experiments)
     stats = sim.start_simulation()
     means = sim.generate_final_answer()
     print(means)
+    return means
 
 
 if __name__ == "__main__":

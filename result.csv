@@ -1,6 +1,6 @@
 ,0
 overall_infections(a),794776.04
-overall_dead_to_recovered_percent_365(b),2.16
-daily_new_cases_to_population_percent_avg(c),1.92
-infected_percent_avg(d),21.46
+overall_dead_to_recovered_percent_365(b),2.16%
+daily_new_cases_to_population_percent_avg(c),1.92%
+infected_percent_avg(d),21.46%
 days_to_0,103.05

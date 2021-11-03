@@ -19,7 +19,7 @@ from dataclasses import dataclass
 #  - Every day's infections,deaths and recoveries are counted to a 2nd DF
 #  - When a round ends a round summary is created
 #  - When the simulation ends a summary of the round summaries is created
-#  - From the round summaries a final answer to the HA is created
+#  - From the round summaries a final summary is created
 
 
 class Round:
@@ -147,15 +147,15 @@ class Round:
         :return: Round Summary DF
         """
         df = self.daily_data.copy()
-        df['overall_infections(a)'] = df.sum()['infected']
+        df['overall_infections'] = df.sum()['infected']
         last_ind = self.daily_data.tail(1).index[0]
         ind = 364 if 364 in df.index else last_ind
-        df['overall_dead_to_recovered_percent_365(b)'] = np.divide(df.loc[:ind].sum()['dead'],
+        df['overall_dead_to_recovered_percent_365'] = np.divide(df.loc[:ind].sum()['dead'],
                                                                    df.loc[:ind].sum()['recovered'],
                                                                    where=(df.loc[:364].sum()['recovered'] != 0),
                                                                    out=np.zeros_like(df['dead'])) * 100
         df['daily_new_cases_to_population_percent_avg(c)'] = (df['new_cases'] / self.pop_size) * 100
-        df['infected_percent_avg(d)'] = ((self.pop_size - df['vulnerable']) / self.pop_size) * 100
+        df['infected_percent_avg'] = ((self.pop_size - df['vulnerable']) / self.pop_size) * 100
         round_summary = df.mean()
         round_summary['days_to_0'] = last_ind
         round_summary = round_summary.drop(self.round_cols)
@@ -164,7 +164,8 @@ class Round:
 
 class Simulation:
     """
-    This is the main method for the simulation. It facilitates the simulation over a given number of rounds (default is 100)
+    This is the main method for the simulation. It facilitates the simulation over a given number of rounds (default
+    is 100)
     """
     def __init__(self, pop_size=100000, iterations=100):
         self.pop_size = pop_size
@@ -184,10 +185,10 @@ class Simulation:
             self.daily_data_stats[f'round{i}'] = round.daily_data
         return self.stats.T
 
-    def generate_final_answer(self):
+    def generate_final_df(self):
         """
-        Formats the answer to the asked submission format
-        :return: the Means DF - containing the HA answer
+        Formats the means DF
+        :return: The final Means DF
         """
         means = self.stats.T.mean()
         means = means.apply(lambda x: f"{x:.2f}")
@@ -242,12 +243,12 @@ def main(args: Sim_Args):
     """
     Main code for running the program
     :param args:
-    :return: Final Answer DF
+    :return: Final Stats DF
     """
     print(f"Running {args.num_experiments} simulations with {args.num_people} people each.")
     sim = Simulation(pop_size=args.num_people, iterations=args.num_experiments)
     stats = sim.start_simulation()
-    means = sim.generate_final_answer()
+    means = sim.generate_final_df()
     print(means)
     return means
 
